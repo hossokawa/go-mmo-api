@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/hossokawa/go-nethttp-example/internal/api"
 	"github.com/hossokawa/go-nethttp-example/internal/player"
 )
 
@@ -22,19 +23,19 @@ func (h *PlayerHandler) CreatePlayer(w http.ResponseWriter, r *http.Request) {
 
 	var params player.CreatePlayerParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		api.WriteJSONError(w, http.StatusBadRequest, "Error decoding request body into CreatePlayerParams struct")
 		return
 	}
 	defer r.Body.Close()
 
 	if params.Username == "" || params.Class == "" {
-		http.Error(w, "Username and/or class cannot be empty", http.StatusBadRequest)
+		api.WriteJSONError(w, http.StatusBadRequest, "Username and/or class cannot be empty")
 		return
 	}
 
 	p, err := h.service.CreatePlayer(context.Background(), params.Username, params.Class)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -47,7 +48,7 @@ func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 
 	players, err := h.service.GetAllPlayers(context.Background())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -59,7 +60,7 @@ func (h *PlayerHandler) GetPlayerByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, NewIDParsingError(idStr).Error(), http.StatusInternalServerError)
+		api.WriteJSONError(w, http.StatusInternalServerError, api.NewIDParsingError(idStr).Error())
 		return
 	}
 
@@ -67,7 +68,7 @@ func (h *PlayerHandler) GetPlayerByID(w http.ResponseWriter, r *http.Request) {
 
 	p, err := h.service.GetPlayerByID(context.Background(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
