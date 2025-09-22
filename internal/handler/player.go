@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,6 +16,18 @@ type PlayerHandler struct {
 
 func NewPlayerHandler(service *player.PlayerService) *PlayerHandler {
 	return &PlayerHandler{service: service}
+}
+
+type IDParsingError struct {
+	value string
+}
+
+func NewIDParsingError(value string) error {
+	return &IDParsingError{value: value}
+}
+
+func (e *IDParsingError) Error() string {
+	return fmt.Sprintf("parsing id: invalid value '%v'", e.value)
 }
 
 func (h *PlayerHandler) CreatePlayer(w http.ResponseWriter, r *http.Request) {
@@ -56,9 +69,10 @@ func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PlayerHandler) GetPlayerByID(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, NewIDParsingError(idStr).Error(), http.StatusInternalServerError)
 		return
 	}
 
