@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -17,4 +18,16 @@ func WriteJSONError(w http.ResponseWriter, status int, msg string) {
 		Status:  status,
 		Message: msg,
 	})
+}
+
+type IDParsingError struct {
+	value string
+}
+
+func NewIDParsingError(value string) error {
+	return &IDParsingError{value: value}
+}
+
+func (e *IDParsingError) Error() string {
+	return fmt.Sprintf("parsing id: invalid value '%v'", e.value)
 }
