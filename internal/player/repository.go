@@ -120,6 +120,9 @@ func (r *pgRepository) GetPlayerByID(ctx context.Context, id int32) (*Player, er
 		&p.UpdatedAt,
 	)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("scanning row into player struct: %w", err)
 	}
 

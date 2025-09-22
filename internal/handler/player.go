@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -57,6 +58,8 @@ func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PlayerHandler) GetPlayerByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -64,10 +67,13 @@ func (h *PlayerHandler) GetPlayerByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
 	p, err := h.service.GetPlayerByID(context.Background(), int32(id))
 	if err != nil {
+		var notFoundErr *player.NotFoundErr
+		if errors.As(err, &notFoundErr) {
+			api.WriteJSONError(w, http.StatusNotFound, notFoundErr.Error())
+			return
+		}
 		api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

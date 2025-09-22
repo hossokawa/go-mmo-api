@@ -14,6 +14,18 @@ func NewPlayerService(repo PlayerRepository) *PlayerService {
 	return &PlayerService{repo: repo}
 }
 
+type NotFoundErr struct {
+	msg string
+}
+
+func NewNotFoundErr(id int32) error {
+	return &NotFoundErr{msg: fmt.Sprintf("player with id %v not found", id)}
+}
+
+func (e *NotFoundErr) Error() string {
+	return e.msg
+}
+
 func (s *PlayerService) CreatePlayer(ctx context.Context, username, class string) (*Player, error) {
 	_, err := s.repo.GetPlayerByUsername(ctx, username)
 	if err == nil {
@@ -36,6 +48,9 @@ func (s *PlayerService) GetPlayerByID(ctx context.Context, id int32) (*Player, e
 	player, err := s.repo.GetPlayerByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("getting player with id %v: %w", id, err)
+	}
+	if player == nil {
+		return nil, NewNotFoundErr(id)
 	}
 
 	return player, nil
