@@ -97,3 +97,33 @@ func (h *PlayerHandler) GetPlayerByID(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(p)
 }
+
+func (h *PlayerHandler) DeletePlayerByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		api.WriteJSONError(w, http.StatusInternalServerError, api.NewIDParsingError(idStr).Error())
+		return
+	}
+
+	_, err = h.service.GetPlayerByID(context.Background(), int32(id))
+	if err != nil {
+		var notFoundErr *player.NotFoundErr
+		if errors.As(err, &notFoundErr) {
+			api.WriteJSONError(w, http.StatusNotFound, notFoundErr.Error())
+			return
+		}
+		api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = h.service.DeletePlayerByID(context.Background(), int32(id))
+	if err != nil {
+		api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

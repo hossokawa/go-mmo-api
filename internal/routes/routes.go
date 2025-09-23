@@ -16,4 +16,5 @@ func SetupRoutes(router *http.ServeMux, db *pgx.Conn) {
 	router.HandleFunc("POST /player", playerHandler.CreatePlayer)
 	router.HandleFunc("GET /player", playerHandler.GetAllPlayers)
 	router.HandleFunc("GET /player/{id}", playerHandler.GetPlayerByID)
+	router.HandleFunc("DELETE /player/{id}", playerHandler.DeletePlayerByID)
 }
