@@ -47,14 +47,30 @@ func (h *PlayerHandler) CreatePlayer(w http.ResponseWriter, r *http.Request) {
 func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/`json")
 
-	players, err := h.service.GetAllPlayers(context.Background())
-	if err != nil {
-		api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
-		return
+	username := r.URL.Query().Get("username")
+
+	if username != "" {
+		p, err := h.service.GetPlayerByUsername(context.Background(), username)
+		if err != nil {
+			var notFoundErr *player.NotFoundErr
+			if errors.As(err, &notFoundErr) {
+				api.WriteJSONError(w, http.StatusNotFound, notFoundErr.Error())
+				return
+			}
+			api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		json.NewEncoder(w).Encode(p)
+	} else {
+		players, err := h.service.GetAllPlayers(context.Background())
+		if err != nil {
+			api.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		json.NewEncoder(w).Encode(players)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(players)
 }
 
 func (h *PlayerHandler) GetPlayerByID(w http.ResponseWriter, r *http.Request) {

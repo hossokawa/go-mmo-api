@@ -147,6 +147,9 @@ func (r *pgRepository) GetPlayerByUsername(ctx context.Context, username string)
 		&p.UpdatedAt,
 	)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("scanning row into player struct: %w", err)
 	}
 
