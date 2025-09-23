@@ -13,7 +13,7 @@ func SetupRoutes(router *http.ServeMux, db *pgx.Conn) {
 	playerService := player.NewPlayerService(playerRepo)
 	playerHandler := handler.NewPlayerHandler(playerService)
 
+	router.HandleFunc("POST /player", playerHandler.CreatePlayer)
 	router.HandleFunc("GET /player", playerHandler.GetAllPlayers)
 	router.HandleFunc("GET /player/{id}", playerHandler.GetPlayerByID)
-	router.HandleFunc("POST /player", playerHandler.CreatePlayer)
 }
