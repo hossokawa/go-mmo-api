@@ -15,15 +15,13 @@ func NewPlayerService(repo PlayerRepository) *PlayerService {
 }
 
 type NotFoundErr struct {
-	msg string
-}
-
-func NewNotFoundErr(id int32) error {
-	return &NotFoundErr{msg: fmt.Sprintf("player with id %v not found", id)}
+	resource  string
+	attribute string
+	value     any
 }
 
 func (e *NotFoundErr) Error() string {
-	return e.msg
+	return fmt.Sprintf("%s with %s '%v' not found", e.resource, e.attribute, e.value)
 }
 
 func (s *PlayerService) CreatePlayer(ctx context.Context, username, class string) (*Player, error) {
@@ -50,7 +48,7 @@ func (s *PlayerService) GetPlayerByID(ctx context.Context, id int32) (*Player, e
 		return nil, fmt.Errorf("getting player with id %v: %w", id, err)
 	}
 	if player == nil {
-		return nil, NewNotFoundErr(id)
+		return nil, &NotFoundErr{resource: "player", attribute: "id", value: id}
 	}
 
 	return player, nil
@@ -60,6 +58,9 @@ func (s *PlayerService) GetPlayerByUsername(ctx context.Context, username string
 	player, err := s.repo.GetPlayerByUsername(ctx, username)
 	if err != nil {
 		return nil, fmt.Errorf("getting player with username '%v': %w", username, err)
+	}
+	if player == nil {
+		return nil, &NotFoundErr{resource: "player", attribute: "username", value: username}
 	}
 
 	return player, nil
