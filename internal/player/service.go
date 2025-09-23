@@ -25,9 +25,12 @@ func (e *NotFoundErr) Error() string {
 }
 
 func (s *PlayerService) CreatePlayer(ctx context.Context, username, class string) (*Player, error) {
-	_, err := s.repo.GetPlayerByUsername(ctx, username)
-	if err == nil {
+	p, err := s.repo.GetPlayerByUsername(ctx, username)
+	if err == nil && p != nil {
 		return nil, errors.New("username already in use")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("creating player: %w", err)
 	}
 
 	newPlayer, err := s.repo.CreatePlayer(ctx, CreatePlayerParams{Username: username, Class: class})
